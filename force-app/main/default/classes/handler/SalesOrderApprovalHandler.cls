@@ -10,6 +10,9 @@ public with sharing class OrderApprovalHandler {
             if(Trigger.isInsert){ onBeforeInsert(); }
             if(Trigger.isBefore){ onBeforeUpdate(); }
         }
+        if(Trigger.isAfter){
+            if(Trigger.isInsert){ onAfterInsert(); }
+        }
     }
 
     private void onBeforeInsert(){
@@ -18,13 +21,11 @@ public with sharing class OrderApprovalHandler {
             if (order.TotalAmount__c < 100) {
                 order.addError('Valor de pedido minímo não atingido.');
                 ErrorLogService.log(
-                    order.OrderNumber__c,
+                    order.Name,
                     'Não é possível criar o pedido, pois o valor mínimo de R$100,00 não foi atingido.',
                     'Validation',
                     System.now()
                 );
-            } else {
-                // Chama a Queueable
             }
         }
 
@@ -33,12 +34,22 @@ public with sharing class OrderApprovalHandler {
                 String statusAntigo = oldMap.get(order.Id).Status__c;
                 String statusNovo = order.Status__c;
 
-                if (statusNovo == 'Pending' && (statusAntigo == 'Approved' || statusAntigo == 'Rejected')){
+                if (statusNovo == 'Pending' || statusNovo == 'Aprovved' && (statusAntigo == 'Approved' || statusAntigo == 'Rejected')){
                     order.addError('Pedidos finalizados não podem ser reenfileirados.')
                 }
             }
         }
+        private void onAfterInsert(){
+            Set<Id> idToProcess = new Set<Id>();
 
+            for(Sales_Order__c order : newList){
+                if(order.Status__c == 'Pending'){
+                    idToProcess.add(order.Id);
+                }
+            }
+            if(!idToProcess == null){
+                System.enqueueJob(new SalesOrderQueueable(idToProcess));
+            }
+        }
     }
-
 }
