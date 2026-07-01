@@ -19,7 +19,6 @@ public with sharing class SalesOrderQueueable implements Queueable {
 
         for (Sales_Order__c order : orders) {
             if (order.TotalAmount__c < 10000) {
-                // Aprovação automática: não depende de gerente
                 order.Status__c = 'Approved';
                 order.ProcessedAt__c = System.now();
                 orderForUpdate.add(order);
@@ -37,8 +36,6 @@ public with sharing class SalesOrderQueueable implements Queueable {
                 orderForUpdate.add(order);
 
             } else {
-                // Regra de negócio esperada, não uma exceção:
-                // pedido alto valor sem gerente identificado.
                 order.Status__c = 'Rejected';
                 orderForUpdate.add(order);
                 ErrorLogService.log(
