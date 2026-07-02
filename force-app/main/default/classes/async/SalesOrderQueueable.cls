@@ -40,8 +40,8 @@ public with sharing class SalesOrderQueueable implements Queueable {
                 orderForUpdate.add(order);
                 ErrorLogService.log(
                     order,
-                    'Não foi possível localizar o gestor responsável para aprovação do pedido ' + order.Name,
-                    'System',
+                    'Não foi possível localizar o gerente responsável para aprovação do pedido ' + order.Name,
+                    'Validation',
                     System.now()
                 );
             }
